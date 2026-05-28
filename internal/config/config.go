@@ -1,8 +1,9 @@
 package config
 
 type Settings struct {
-	Port int
-	Host string
+	Port       int
+	Host       string
+	DBFileName string
 }
 
 func Load() (Settings, error) {
@@ -12,7 +13,8 @@ func Load() (Settings, error) {
 
 func loadDefaults() Settings {
 	return Settings{
-		Host: "localhost",
-		Port: 8080,
+		Host:       "localhost",
+		Port:       8080,
+		DBFileName: "app_reviews.db",
 	}
 }
