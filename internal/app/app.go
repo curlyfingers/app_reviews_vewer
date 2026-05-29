@@ -11,17 +11,20 @@ import (
 	"net/http"
 )
 
+// App represents App Reviews API.
 type App struct {
 	addr       string
 	dbFileName string
 }
 
+// New creates a new instance of App.
 func New(cfg config.Settings) *App {
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 
 	return &App{addr: addr, dbFileName: cfg.DBFileName}
 }
 
+// Start starts the application and executes all of the necessary setup steps.
 func (a *App) Start() {
 	port := 8080
 	addr := fmt.Sprintf("localhost:%d", port)

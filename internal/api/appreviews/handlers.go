@@ -17,16 +17,19 @@ const (
 	feedKey    = "feed"
 )
 
+// Handler has all of the necessary dependencies for handling review resource.
 type Handler struct {
 	client *http.Client
 	store  Storage
 }
 
+// NewHandler creates a new instance of Handler.
 func NewHandler(dbConn *sql.DB) Handler {
 	storage := NewStorage(dbConn)
 	return Handler{client: &http.Client{}, store: storage}
 }
 
+// FetchReviews is used to fetch and store the most up-to-date app reviews.
 func (h Handler) FetchReviews() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -55,6 +58,8 @@ func (h Handler) FetchReviews() http.HandlerFunc {
 	}
 }
 
+// GetAppReviews returns cached app reviews for the last 48 hours.
+// If there are none in that time window it will return one review that is older.
 func (h Handler) GetAppReviews() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -69,6 +74,26 @@ func (h Handler) GetAppReviews() http.HandlerFunc {
 			log.Default().Printf("Could not read reviews from store, error: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+		if len(reviews) == 0 {
+			// try refreshing reviews
+			rs, err := h.fetchReviews(ctx, appID)
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			err = h.store.WriteReviews(ctx, appID, rs)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			reviews, err = h.store.ReadReviews(ctx, appID)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		data, err := json.Marshal(map[string][]ReviewEntry{reviewsKey: reviews})

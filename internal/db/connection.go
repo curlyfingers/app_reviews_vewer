@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // Needed to use SQLite
 )
 
+// Connect instantiates an SQLite connection in file mode.
 func Connect(dbFileName string) (*sql.DB, error) {
 	if dbFileName == "" {
 		return nil, errors.New("invalid DB file")

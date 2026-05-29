@@ -8,14 +8,17 @@ import (
 	"time"
 )
 
+// Storage is used to cache app reviews.
 type Storage struct {
 	db *sql.DB
 }
 
+// NewStorage returns an instance of Storage.
 func NewStorage(db *sql.DB) Storage {
 	return Storage{db: db}
 }
 
+// WriteReviews clears old reviews for app and persists new.
 func (s Storage) WriteReviews(ctx context.Context, appID string, data []ReviewEntry) error {
 	valuesStr := make([]string, 0, len(data))
 	valuesArgs := make([]any, 0, len(data)*7)
@@ -53,6 +56,8 @@ func (s Storage) WriteReviews(ctx context.Context, appID string, data []ReviewEn
 	return nil
 }
 
+// ReadReviews returns app reviews for the last 48 hours.
+// If there are none, it returns one that is older that that time window.
 func (s Storage) ReadReviews(ctx context.Context, appID string) ([]ReviewEntry, error) {
 	stmt := `
 	SELECT title, content, author, score, submitted_at
